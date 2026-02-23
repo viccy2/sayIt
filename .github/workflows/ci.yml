@@ -11,16 +11,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Use Node.js
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          # Caching npm dependencies helps speed up future builds
           cache: 'npm'
-          
+
       - name: Install dependencies
-        run: npm install
-        
+        # We use --legacy-peer-deps to ignore minor version conflicts
+        # between Passport and Express types that often cause install failures.
+        run: npm install --legacy-peer-deps
+
       - name: Build project
+        # This will trigger the 'tsc -p .' command from your package.json
         run: npm run build
