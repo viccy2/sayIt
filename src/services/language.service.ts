@@ -1,4 +1,4 @@
-import languageDetect from 'node-languagedetect';
+import languageDetect from 'node-languagedetect'; // Use this exact name
 
 export const detectLanguage = async (text: string): Promise<string> => {
   try {
