@@ -16,5 +16,6 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-    - run: npm install  # Changed from 'npm ci' to 'npm install'
-    - run: npm run build
+    - run: npm install
+    - name: Build Project
+      run: npm run build || (echo "Build failed, check errors above" && exit 1)
