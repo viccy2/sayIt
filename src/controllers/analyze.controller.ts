@@ -6,7 +6,9 @@ import History from '../models/history.model';
 export const analyzeText = async (req: Request, res: Response) => {
   try {
     const { text } = req.body;
-    const userId = (req.user as any)?._id;
+    
+    // Cast to 'any' to avoid the 'never' type conflict during the build
+    const user = req.user as any;
 
     if (!text) {
       return res.status(400).json({ message: 'Text is required' });
@@ -15,11 +17,12 @@ export const analyzeText = async (req: Request, res: Response) => {
     const language = await LanguageService.detectLanguage(text);
     const meaning = await MeaningService.getShortMeaning(text);
 
-    // Save to history if user is logged in
-    let savedRecord = null;
-    if (userId) {
+    // Initialize as 'any' so it can accept the Mongoose Document or null
+    let savedRecord: any = null;
+
+    if (user && user._id) {
       savedRecord = await History.create({
-        userId,
+        userId: user._id,
         originalText: text,
         detectedLanguage: language,
         meaning: meaning,
@@ -29,7 +32,7 @@ export const analyzeText = async (req: Request, res: Response) => {
     res.json({
       language,
       meaning,
-      historyId: savedRecord?._id,
+      historyId: savedRecord ? savedRecord._id : null,
     });
   } catch (error) {
     res.status(500).json({ message: 'Analysis failed', error });
