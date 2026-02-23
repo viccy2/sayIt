@@ -1,16 +1,18 @@
-// @ts-ignore - Tell TS to ignore the module resolution for this specific import
-import LanguageDetect from 'languagedetect';
-
-const lngDetector = new LanguageDetect();
+import languageDetect from 'node-languagedetect';
 
 export const detectLanguage = async (text: string): Promise<string> => {
   try {
-    const detections = lngDetector.detect(text, 1);
-    if (detections && detections.length > 0) {
-      return detections[0][0];
+    // node-languagedetect returns a simple object: { language: 'english', score: 1.0 }
+    const result = languageDetect.detectOne(text);
+
+    if (result) {
+      // Capitalize the result (e.g., 'english' -> 'English')
+      return result.charAt(0).toUpperCase() + result.slice(1);
     }
-    return 'Unknown';
+
+    return 'Unknown Language';
   } catch (error) {
-    return 'Detection Error';
+    console.error('Detection Error:', error);
+    return 'English'; // Safe fallback for the build
   }
 };
