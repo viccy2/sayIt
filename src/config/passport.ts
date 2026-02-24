@@ -1,47 +1,31 @@
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import { config } from './env';
-// Note: We will create the user model in the next step
 import User from '../models/user.model';
-
-passport.serializeUser((user: any, done) => {
-  done(null, user.id);
-});
-
-passport.deserializeUser(async (id: string, done) => {
-  try {
-    const user = await User.findById(id);
-    done(null, user);
-  } catch (err) {
-    done(err, null);
-  }
-});
 
 passport.use(
   new GoogleStrategy(
     {
-      clientID: config.google.clientId,
-      clientSecret: config.google.clientSecret,
-      callbackURL: config.google.callbackUrl,
+      clientID: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      // Use BACKEND_URL from env (e.g. https://sayit-api.vercel.app)
+      callbackURL: `${process.env.BACKEND_URL}/api/auth/google/callback`,
+      proxy: true // Necessary for Vercel/Heroku HTTPS
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
         let user = await User.findOne({ googleId: profile.id });
-
         if (!user) {
           user = await User.create({
             googleId: profile.id,
-            email: profile.emails?.[0].value,
             displayName: profile.displayName,
+            email: profile.emails?.[0].value,
             avatar: profile.photos?.[0].value,
           });
         }
         return done(null, user);
-      } catch (err) {
-        return done(err as Error, undefined);
+      } catch (error) {
+        return done(error as Error, undefined);
       }
     }
   )
 );
-
-export default passport;
