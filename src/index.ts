@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import session from 'express-session';
 import passport from 'passport';
-import connectDB from './config/db';
+import connectDB from './config/database';
 import authRoutes from './routes/auth.route';
 // ... other imports
 
