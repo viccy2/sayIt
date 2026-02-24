@@ -1,47 +1,51 @@
-import './types/index'; // MUST BE FIRST
-import express, { Application, Request, Response } from 'express';
+import express from 'express';
 import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
 import session from 'express-session';
 import passport from 'passport';
-import { config } from './config/env';
-import { connectDB } from './config/database';
-
-// Config & Routes
-import './config/passport';
+import connectDB from './config/db';
 import authRoutes from './routes/auth.route';
-import analyzeRoutes from './routes/analyze.route';
-import historyRoutes from './routes/history.route';
+// ... other imports
 
-const app: Application = express();
+const app = express();
 
+// 1. Database Connection
 connectDB();
 
-app.use(helmet());
-app.use(cors({ origin: config.clientUrl, credentials: true }));
-app.use(morgan('dev'));
+// 2. CORS - Allow your Vercel Frontend
+app.use(cors({
+  origin: process.env.CLIENT_URL, // e.g. https://sayit-frontend.vercel.app
+  credentials: true
+}));
+
 app.use(express.json());
 
+// 3. Session & Cookies (Vercel Production Settings)
+app.set('trust proxy', 1); // Trust Vercel's proxy for secure cookies
 app.use(
   session({
-    secret: config.sessionSecret,
+    secret: process.env.SESSION_SECRET!,
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: config.nodeEnv === 'production' },
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 24 * 60 * 60 * 1000
+    },
   })
 );
 
 app.use(passport.initialize());
 app.use(passport.session());
 
+// 4. Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/analyze', analyzeRoutes);
-app.use('/api/history', historyRoutes);
+// app.use('/api/analyze', analyzeRoutes);
 
-app.get('/', (req: Request, res: Response) => {
-  res.send('sayIt API is running...');
-});
+// 5. Port Listening (ONLY in development)
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`Running locally on port ${PORT}`));
+}
 
-const PORT = config.port;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+// 6. Export for Vercel
+export default app;
