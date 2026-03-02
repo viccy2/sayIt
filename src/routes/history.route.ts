@@ -1,10 +1,13 @@
 import { Router } from 'express';
-import * as HistoryController from '../controllers/history.controller';
+import * as historyController from '../controllers/history.controller';
+import { protect } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// Endpoint: GET /api/history
-router.get('/', HistoryController.getHistory);
-router.delete('/:id', HistoryController.deleteHistoryItem);
+// Protect all history routes
+router.use(protect);
+
+router.get('/', historyController.getHistory);
+router.delete('/:id', historyController.deleteHistoryItem);
 
 export default router;
