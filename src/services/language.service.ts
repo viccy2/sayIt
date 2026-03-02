@@ -1,21 +1,19 @@
-// Using require to bypass TypeScript's strict module resolution for this library
-const LanguageDetect = require('languagedetect');
+import LanguageDetect from 'languagedetect';
+
 const lngDetector = new LanguageDetect();
 
 export const detectLanguage = async (text: string): Promise<string> => {
   try {
-    // .detect(text, limit) returns an array: [['english', 0.5]]
-    const detections = lngDetector.detect(text, 1);
-
-    if (detections && detections.length > 0) {
-      const langName = detections[0][0];
-      // Format to "English", "Spanish", etc.
-      return langName.charAt(0).toUpperCase() + langName.slice(1);
+    const results = lngDetector.detect(text, 1); // Get the top match
+    
+    if (results.length > 0) {
+      // Returns the name of the language (e.g., 'english')
+      return results[0][0].charAt(0).toUpperCase() + results[0][0].slice(1);
     }
-
-    return 'Unknown Language';
+    
+    return 'Unknown';
   } catch (error) {
-    console.error('Language detection failed:', error);
-    return 'English'; // Default fallback
+    console.error('Language Detection Error:', error);
+    return 'Detection Error';
   }
 };
