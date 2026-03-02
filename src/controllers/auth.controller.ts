@@ -1,5 +1,21 @@
 import { Request, Response } from 'express';
 import * as authService from '../services/auth.service';
+import User from '../models/User'; // Adjust path to your User model
+
+export const getCurrentUser = async (req: any, res: any) => {
+  try {
+    // req.user.id comes from the middleware we just wrote
+    const user = await User.findById(req.user.id).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 
 export const register = async (req: Request, res: Response) => {
   try {
