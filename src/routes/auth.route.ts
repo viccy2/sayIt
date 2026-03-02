@@ -1,30 +1,14 @@
 import { Router } from 'express';
 import * as authController from '../controllers/auth.controller';
+import { protect } from '../middleware/auth'; // Import the middleware
 
 const router = Router();
 
-/**
- * @route   POST /api/auth/register
- * @desc    Register a new user with username, email, and password
- */
 router.post('/register', authController.register);
-
-/**
- * @route   POST /api/auth/login
- * @desc    Authenticate user and get JWT token
- */
 router.post('/login', authController.login);
 
-/**
- * GOOGLE AUTH (DEACTIVATED)
- * Uncomment these once Google Cloud Console billing/payment is resolved.
- */
-/*
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-router.get('/google/callback', 
-  passport.authenticate('google', { failureRedirect: '/login' }),
-  authController.googleCallback
-);
-*/
+// NEW PROTECTED ROUTE
+// This matches your frontend's GET /api/auth/current_user
+router.get('/current_user', protect, authController.getCurrentUser);
 
 export default router;
