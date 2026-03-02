@@ -1,51 +1,28 @@
-import express from 'express';
+import express, { Application } from 'express';
+import mongoose from 'mongoose';
 import cors from 'cors';
-import session from 'express-session';
-import passport from 'passport';
-import connectDB from './config/database';
-import authRoutes from './routes/auth.route';
-// ... other imports
+import dotenv from 'dotenv';
+import authRoutes from './routes/auth';
 
-const app = express();
+dotenv.config();
 
-// 1. Database Connection
-connectDB();
+const app: Application = express();
 
-// 2. CORS - Allow your Vercel Frontend
+app.use(express.json());
 app.use(cors({
-  origin: process.env.CLIENT_URL, // e.g. https://sayit-frontend.vercel.app
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true
 }));
 
-app.use(express.json());
-
-// 3. Session & Cookies (Vercel Production Settings)
-app.set('trust proxy', 1); // Trust Vercel's proxy for secure cookies
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET!,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 24 * 60 * 60 * 1000
-    },
-  })
-);
-
-app.use(passport.initialize());
-app.use(passport.session());
-
-// 4. Routes
+// Routes
 app.use('/api/auth', authRoutes);
-// app.use('/api/analyze', analyzeRoutes);
 
-// 5. Port Listening (ONLY in development)
-if (process.env.NODE_ENV !== 'production') {
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => console.log(`Running locally on port ${PORT}`));
-}
+const PORT = process.env.PORT || 5000;
+const MONGODB_URI = process.env.MONGODB_URI as string;
 
-// 6. Export for Vercel
-export default app;
+mongoose.connect(MONGODB_URI)
+  .then(() => {
+    console.log('Connected to MongoDB');
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  })
+  .catch(err => console.error('MongoDB connection error:', err));
