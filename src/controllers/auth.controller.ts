@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import * as authService from '../services/auth.service';
-import User from '../models/User'; // Adjust path to your User model
+
 
 export const getCurrentUser = async (req: any, res: any) => {
   try {
