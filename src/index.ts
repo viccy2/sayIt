@@ -18,55 +18,69 @@ dotenv.config();
 
 const app: Application = express();
 
-// 1. Security & Logging Middleware
-app.use(helmet());
-app.use(morgan('dev'));
-app.use(logger); // Your custom logger middleware
+/**
+ * 1. Global Middleware
+ * Logger and Security headers should always come first.
+ */
+app.use(logger); // Your custom request logger
+app.use(helmet()); // Security headers
+app.use(morgan('dev')); // Development logging
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 2. CORS Configuration
+/**
+ * 2. CORS Configuration
+ * Ensures your Vue 3 frontend can talk to this API.
+ */
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true
 }));
 
 /**
- * 3. Passport & Session (DEACTIVATED FOR NOW)
- * We are commenting these out to stop the build errors related to missing 
- * Google Strategy dependencies. We will use JWT for the Email/Password flow.
+ * 3. Passport & Session (DEACTIVATED)
+ * Commented out to prevent build errors while Google Console issues are resolved.
+ * We are using JWT-based auth in auth.route.ts instead.
  */
 // import passport from 'passport';
 // import './config/passport';
 // app.use(passport.initialize());
 // app.use(passport.session());
 
-// 4. Routes
+/**
+ * 4. API Routes
+ */
 app.use('/api/auth', authRoutes);
 app.use('/api/analyze', analyzeRoutes);
 app.use('/api/history', historyRoutes);
 
-// 5. Global Error Handler
+/**
+ * 5. Error Handling
+ * This MUST be the last middleware in the stack.
+ */
 app.use(errorHandler);
 
-// 6. Database & Server Startup
+/**
+ * 6. Database Connection & Server Start
+ */
 const PORT = process.env.PORT || 5000;
 const MONGODB_URI = process.env.MONGODB_URI as string;
 
 if (!MONGODB_URI) {
-  console.error('MONGODB_URI is not defined in environment variables');
+  console.error('FATAL ERROR: MONGODB_URI is not defined.');
   process.exit(1);
 }
 
-mongoose.connect(MONGODB_URI)
+mongoose
+  .connect(MONGODB_URI)
   .then(() => {
-    console.log('✅ Connected to MongoDB');
+    console.log('✨ Connected to MongoDB Atlas');
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`🚀 Server active on port ${PORT}`);
     });
   })
   .catch((err) => {
-    console.error('❌ MongoDB connection error:', err);
+    console.error('💥 Database connection failed:', err.message);
   });
 
 export default app;
