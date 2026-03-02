@@ -1,9 +1,14 @@
 import { Router } from 'express';
-import * as AnalyzeController from '../controllers/analyze.controller';
+import * as analyzeController from '../controllers/analyze.controller';
+import { protect } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// Endpoint: POST /api/analyze
-router.post('/', AnalyzeController.analyzeText);
+/**
+ * @route   POST /api/analyze
+ * @desc    Analyze text (Language + Meaning) and save to history
+ * @access  Private (Requires JWT)
+ */
+router.post('/', protect, analyzeController.analyzeText);
 
 export default router;
