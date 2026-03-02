@@ -1,18 +1,28 @@
 import { Request, Response } from 'express';
+import * as authService from '../services/auth.service';
 
-export const googleCallback = (req: Request, res: Response) => {
-  // Successful authentication, redirect to Vue frontend history page
-  res.redirect(`${process.env.CLIENT_URL}/history`);
+export const register = async (req: Request, res: Response) => {
+  try {
+    await authService.registerUser(req.body);
+    res.status(201).json({ message: "User created" });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
 };
 
-export const logout = (req: Request, res: Response) => {
-  req.logout((err) => {
-    if (err) return res.status(500).json({ message: 'Logout failed' });
-    res.status(200).json({ message: 'Logged out successfully' });
-  });
-};
+export const login = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+    const user = await authService.validateUser(email, password);
 
-export const getUser = (req: Request, res: Response) => {
-  // Returns the logged-in user's profile to the Vue app
-  res.json(req.user || null);
+    if (!user) return res.status(401).json({ message: "Invalid credentials" });
+
+    const token = authService.generateToken(user);
+    res.json({
+      token,
+      user: { username: user.username, email: user.email, displayName: user.username }
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Login error" });
+  }
 };
