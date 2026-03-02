@@ -1,53 +1,30 @@
-import { Router, Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
-import User from '../models/User';
+import { Router } from 'express';
+import * as authController from '../controllers/auth.controller';
 
 const router = Router();
 
-// Registration
-router.post('/register', async (req: Request, res: Response): Promise<any> => {
-  try {
-    const { username, email, password } = req.body;
+/**
+ * @route   POST /api/auth/register
+ * @desc    Register a new user with username, email, and password
+ */
+router.post('/register', authController.register);
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ message: "User already exists" });
+/**
+ * @route   POST /api/auth/login
+ * @desc    Authenticate user and get JWT token
+ */
+router.post('/login', authController.login);
 
-    const user = new User({ username, email, password });
-    await user.save();
-
-    return res.status(201).json({ message: "Registration successful" });
-  } catch (error) {
-    return res.status(500).json({ message: "Internal server error" });
-  }
-});
-
-// Login
-router.post('/login', async (req: Request, res: Response): Promise<any> => {
-  try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
-
-    if (!user || !(await user.comparePassword(password))) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
-
-    const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET as string,
-      { expiresIn: '7d' }
-    );
-
-    return res.json({
-      token,
-      user: {
-        username: user.username,
-        email: user.email,
-        displayName: user.username // Matches your frontend HomeView logic
-      }
-    });
-  } catch (error) {
-    return res.status(500).json({ message: "Login failed" });
-  }
-});
+/**
+ * GOOGLE AUTH (DEACTIVATED)
+ * Uncomment these once Google Cloud Console billing/payment is resolved.
+ */
+/*
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+router.get('/google/callback', 
+  passport.authenticate('google', { failureRedirect: '/login' }),
+  authController.googleCallback
+);
+*/
 
 export default router;
