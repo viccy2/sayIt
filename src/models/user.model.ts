@@ -1,19 +1,29 @@
-import { Schema, model, Document } from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 export interface IUser extends Document {
-  googleId: string;
+  username: string;
   email: string;
-  displayName: string;
-  avatar?: string;
-  createdAt: Date;
+  password: string;
+  comparePassword(password: string): Promise<boolean>;
 }
 
-const userSchema = new Schema<IUser>({
-  googleId: { type: String, required: true, unique: true },
+const UserSchema: Schema = new Schema({
+  username: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
-  displayName: { type: String, required: true },
-  avatar: { type: String },
-  createdAt: { type: Date, default: Date.now },
+  password: { type: String, required: true },
+}, { timestamps: true });
+
+// Hash password before saving
+UserSchema.pre<IUser>('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
 });
 
-export default model<IUser>('User', userSchema);
+// Helper to compare passwords
+UserSchema.methods.comparePassword = function (password: string): Promise<boolean> {
+  return bcrypt.compare(password, this.password);
+};
+
+export default mongoose.model<IUser>('User', UserSchema);
