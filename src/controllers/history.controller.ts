@@ -1,36 +1,24 @@
 import { Request, Response } from 'express';
-import * as historyService from '../services/history.service';
+import History from '../models/history.model';
 
-export const getHistory = async (req: Request, res: Response): Promise<any> => {
+export const getUserHistory = async (req: any, res: Response): Promise<any> => {
   try {
-    // FIX for Error 12: Cast ObjectId to string
-    const userId = req.user?._id;
-    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+    // req.user._id comes from your 'protect' middleware
+    const history = await History.find({ user: req.user._id })
+      .sort({ createdAt: -1 }); // Newest first
 
-    // Use .toString() to match the service's expected string type
-    const history = await historyService.getHistoryByUserId(userId.toString());
-    return res.json(history);
-  } catch (error) {
-    return res.status(500).json({ message: 'Error fetching history' });
+    res.status(200).json(history);
+  } catch (error: any) {
+    res.status(500).json({ message: 'Error fetching history' });
   }
 };
 
-export const deleteHistoryItem = async (req: Request, res: Response): Promise<any> => {
-  try {
-    const { id } = req.params;
-    const userId = req.user?._id;
-
-    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
-
-    // FIX for Error 13: Cast ObjectId to string
-    const deletedItem = await historyService.deleteItemById(id, userId.toString());
-    
-    if (!deletedItem) {
-      return res.status(404).json({ message: 'Item not found' });
-    }
-
-    return res.json({ message: 'Item deleted' });
-  } catch (error) {
-    return res.status(500).json({ message: 'Error deleting item' });
-  }
+// We will use this later when we build the Analysis logic
+export const addHistoryItem = async (userId: string, text: string, meaning: string, lang: string) => {
+  return await History.create({
+    user: userId,
+    originalText: text,
+    meaning: meaning,
+    detectedLanguage: lang
+  });
 };
