@@ -1,28 +1,38 @@
 import { Response } from 'express';
 import History from '../models/history.model';
+import mongoose from 'mongoose';
 
+/**
+ * @desc    Get all history items for the logged-in user
+ * @route   GET /api/history
+ * @access  Private
+ */
 export const getUserHistory = async (req: any, res: Response): Promise<any> => {
   try {
-    const userId = req.user?._id;
+    const rawUserId = req.user?._id;
 
-    if (!userId) {
-      console.error("❌ History Request Denied: No User ID in token.");
-      return res.status(401).json({ message: 'User session not found' });
+    if (!rawUserId) {
+      return res.status(401).json({ message: 'Unauthorized: No user ID' });
     }
 
-    // LOG THIS: Copy this ID from your Vercel logs and search it in Atlas
-    console.log("🔍 History Search for User ID:", userId);
+    // Convert string ID to MongoDB ObjectId for a guaranteed match
+    const userId = new mongoose.Types.ObjectId(rawUserId);
 
-    // Search for the ID in both possible field names
-    const history = await History.find({
-      $or: [{ user: userId }, { userId: userId }]
-    }).sort({ createdAt: -1 });
+    console.log("🔍 Querying Atlas for user:", userId);
 
-    console.log(`✅ MongoDB match count: ${history.length}`);
+    // Find all records where the 'user' field matches our ID
+    const history = await History.find({ user: userId })
+      .sort({ createdAt: -1 })
+      .lean();
 
+    console.log(`✅ Found ${history.length} history items in Atlas.`);
+    
     return res.status(200).json(history);
   } catch (error: any) {
     console.error("❌ History Controller Error:", error.message);
-    return res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({ 
+      message: 'Error fetching history', 
+      error: error.message 
+    });
   }
 };
