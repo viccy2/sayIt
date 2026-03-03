@@ -9,6 +9,7 @@ export interface IHistory extends Document {
 }
 
 const HistorySchema: Schema = new Schema({
+  // Using 'user' to match the controller logic
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   originalText: { type: String, required: true },
   meaning: { type: String, required: true },
