@@ -1,31 +1,41 @@
-export const analyzeText = async (req: any, res: Response): Promise<void> => {
+
+import { Response } from 'express';
+import * as LanguageService from '../services/language.service';
+import * as MeaningService from '../services/meaning.service';
+import History from '../models/history.model';
+
+export const analyzeText = async (req: any, res: Response): Promise<any> => {
   try {
     const { text } = req.body;
-    // Log this to your terminal to see if the user is actually arriving
-    console.log("DEBUG: User from req:", req.user);
+    const user = req.user;
 
     if (!text) {
-      res.status(400).json({ message: 'Text is required' });
-      return;
+      return res.status(400).json({ message: 'Text is required' });
     }
 
-    // Run these one by one for a moment to isolate which one is failing
+    // AI logic (Assuming these services are working)
     const language = await LanguageService.detectLanguage(text);
     const meaning = await MeaningService.getShortMeaning(text);
 
-    if (req.user?._id) {
-      await History.create({
-        user: req.user._id, 
+    let savedRecord: any = null;
+
+    if (user && user._id) {
+      // CRITICAL FIX: Changed 'userId' to 'user' to match the Model
+      savedRecord = await History.create({
+        user: user._id, 
         originalText: text,
         detectedLanguage: language,
         meaning: meaning,
       });
-      console.log("✅ Record saved successfully");
     }
 
-    res.json({ language, meaning });
+    return res.json({
+      language,
+      meaning,
+      _id: savedRecord ? savedRecord._id : null,
+    });
   } catch (error: any) {
-    console.error("❌ CRITICAL ERROR:", error.message);
-    res.status(500).json({ message: 'Analysis failed', error: error.message });
+    console.error("Analysis Error:", error.message);
+    return res.status(500).json({ message: 'Analysis failed', error: error.message });
   }
 };
