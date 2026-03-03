@@ -1,4 +1,4 @@
-Import { Response } from 'express';
+import { Response } from 'express';
 import History from '../models/history.model';
 import mongoose from 'mongoose';
 
