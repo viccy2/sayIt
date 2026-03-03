@@ -1,53 +1,31 @@
-import { Request, Response } from 'express';
-import * as LanguageService from '../services/language.service';
-import * as MeaningService from '../services/meaning.service';
-import History from '../models/history.model';
-
-interface AuthenticatedRequest extends Request {
-  user?: { _id: string };
-  body: { text: string };
-}
-
-export const analyzeText = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const analyzeText = async (req: any, res: Response): Promise<void> => {
   try {
     const { text } = req.body;
-    const userId = req.user?._id;
+    // Log this to your terminal to see if the user is actually arriving
+    console.log("DEBUG: User from req:", req.user);
 
-    if (!text || text.trim().length === 0) {
-      res.status(400).json({ message: 'Valid text is required for analysis' });
+    if (!text) {
+      res.status(400).json({ message: 'Text is required' });
       return;
     }
 
-    // 1. Parallel Execution: AI logic can run simultaneously to save time
-    const [language, meaning] = await Promise.all([
-      LanguageService.detectLanguage(text),
-      MeaningService.getShortMeaning(text)
-    ]);
+    // Run these one by one for a moment to isolate which one is failing
+    const language = await LanguageService.detectLanguage(text);
+    const meaning = await MeaningService.getShortMeaning(text);
 
-    let savedRecordId = null;
-
-    // 2. Persist to History if user is authenticated
-    if (userId) {
-      const savedRecord = await History.create({
-        user: userId, // Matches your History.find({ user: userId }) logic
+    if (req.user?._id) {
+      await History.create({
+        user: req.user._id, 
         originalText: text,
         detectedLanguage: language,
         meaning: meaning,
       });
-      savedRecordId = savedRecord._id;
+      console.log("✅ Record saved successfully");
     }
 
-    res.status(200).json({
-      language,
-      meaning,
-      _id: savedRecordId,
-    });
-
+    res.json({ language, meaning });
   } catch (error: any) {
-    console.error("❌ Analysis Error:", error.message);
-    res.status(500).json({ 
-      message: 'Analysis failed', 
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined 
-    });
+    console.error("❌ CRITICAL ERROR:", error.message);
+    res.status(500).json({ message: 'Analysis failed', error: error.message });
   }
 };
