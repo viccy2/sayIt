@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import * as LanguageService from '../services/language.service';
 import * as MeaningService from '../services/meaning.service';
 import History from '../models/history.model';
@@ -6,31 +6,28 @@ import History from '../models/history.model';
 export const analyzeText = async (req: any, res: Response): Promise<any> => {
   try {
     const { text } = req.body;
-    const user = req.user; // Populated by your 'protect' middleware
+    const user = req.user;
 
     if (!text) {
       return res.status(400).json({ message: 'Text is required' });
     }
 
-    // 1. Get AI Analysis from your Services
+    // AI logic (Assuming these services are working)
     const language = await LanguageService.detectLanguage(text);
     const meaning = await MeaningService.getShortMeaning(text);
 
     let savedRecord: any = null;
 
-    // 2. SAVE TO HISTORY
-    // Ensure field names match your History Schema (user, not userId)
     if (user && user._id) {
+      // CRITICAL FIX: Changed 'userId' to 'user' to match the Model
       savedRecord = await History.create({
-        user: user._id, // Matches our history.model.ts
+        user: user._id, 
         originalText: text,
         detectedLanguage: language,
         meaning: meaning,
       });
     }
 
-    // 3. RETURN RESPONSE
-    // We return the full object so the Dashboard can show it immediately
     return res.json({
       language,
       meaning,
@@ -38,9 +35,6 @@ export const analyzeText = async (req: any, res: Response): Promise<any> => {
     });
   } catch (error: any) {
     console.error("Analysis Error:", error.message);
-    return res.status(500).json({ 
-      message: 'Analysis failed', 
-      error: error.message 
-    });
+    return res.status(500).json({ message: 'Analysis failed', error: error.message });
   }
 };
