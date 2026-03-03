@@ -9,30 +9,32 @@ import mongoose from 'mongoose';
  */
 export const getUserHistory = async (req: any, res: Response): Promise<any> => {
   try {
-    const rawUserId = req.user?._id;
+    // 1. Get the ID from the request
+    const rawId = req.user?._id;
 
-    if (!rawUserId) {
-      return res.status(401).json({ message: 'Unauthorized: No user ID' });
+    if (!rawId) {
+      console.log("❌ No user ID found in req.user");
+      return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    // Convert string ID to MongoDB ObjectId for a guaranteed match
-    const userId = new mongoose.Types.ObjectId(rawUserId);
+    // 2. FORCE CAST to ObjectId
+    // Wrapping in String() first handles cases where rawId is already an object
+    const userId = new mongoose.Types.ObjectId(String(rawId));
 
-    console.log("🔍 Querying Atlas for user:", userId);
+    console.log("🔍 Database Query ID:", userId);
 
-    // Find all records where the 'user' field matches our ID
+    // 3. Query using the 'user' field
     const history = await History.find({ user: userId })
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: -1 }) // Newest first
       .lean();
 
-    console.log(`✅ Found ${history.length} history items in Atlas.`);
+    console.log(`✅ Success: Found ${history.length} records in Atlas.`);
     
+    // 4. Return the data
     return res.status(200).json(history);
+
   } catch (error: any) {
     console.error("❌ History Controller Error:", error.message);
-    return res.status(500).json({ 
-      message: 'Error fetching history', 
-      error: error.message 
-    });
+    return res.status(500).json({ message: 'Server error fetching history' });
   }
 };
