@@ -4,7 +4,7 @@ import { protect } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// Protect this route so only the logged-in user sees THEIR history
+// GET /api/history
 router.get('/', protect, getUserHistory);
 
 export default router;
