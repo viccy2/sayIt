@@ -1,13 +1,14 @@
 import { Router } from 'express';
-import { getUserHistory, deleteHistoryItem } from '../controllers/history.controller'; // Added deleteHistoryItem
+import { getUserHistory, deleteHistoryItem } from '../controllers/history.controller';
 import { protect } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// GET /api/history - Fetch all records for the logged-in user
+// GET /api/history -> List all
 router.get('/', protect, getUserHistory);
 
-// DELETE /api/history/:id - Delete a specific record by its ID
-router.get('/:id', protect, deleteHistoryItem); 
+// DELETE /api/history/:id -> Remove one
+// CHANGE THIS LINE: from .get to .delete
+router.delete('/:id', protect, deleteHistoryItem); 
 
 export default router;
