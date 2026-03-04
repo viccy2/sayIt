@@ -1,7 +1,7 @@
-import mongoose, { Schema, Document, Types } from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IHistory extends Document {
-  user: Types.ObjectId;
+  user: string; // Changed to string to match your Atlas data
   originalText: string;
   meaning: string;
   detectedLanguage: string;
@@ -10,8 +10,7 @@ export interface IHistory extends Document {
 
 const HistorySchema: Schema = new Schema({
   user: { 
-    type: Schema.Types.ObjectId, 
-    ref: 'User', 
+    type: String, // Matching the string format in your sample
     required: true,
     index: true 
   },
@@ -22,6 +21,5 @@ const HistorySchema: Schema = new Schema({
   timestamps: true 
 });
 
-// We add 'histories' as the 3rd argument to be 100% sure.
-// Check Atlas: if the collection is named 'History', change the 3rd word to 'History'.
+// Forcing it to use 'histories' as confirmed in your Atlas
 export default mongoose.model<IHistory>('History', HistorySchema, 'histories');
