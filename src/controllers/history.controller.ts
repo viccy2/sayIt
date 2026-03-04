@@ -1,30 +1,27 @@
 import { Response } from 'express';
 import History from '../models/history.model';
-import mongoose from 'mongoose';
 
 export const getUserHistory = async (req: any, res: Response): Promise<any> => {
   try {
-    const rawUserId = req.user?._id;
+    // Get the ID (which is likely a string like "69a69cad...")
+    const userId = req.user?._id;
 
-    if (!rawUserId) {
+    if (!userId) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    // Force the ID into a Hex-based ObjectId
-    const userId = new mongoose.Types.ObjectId(String(rawUserId));
+    console.log(`🔍 Searching histories for string ID: ${userId}`);
 
-    // This log is your "Truth Teller" - check it in your terminal!
-    console.log(`Checking collection: "${History.collection.name}" for User ID: ${userId}`);
-
-    const history = await History.find({ user: userId })
+    // Query using the string ID
+    const history = await History.find({ user: String(userId) })
       .sort({ createdAt: -1 })
       .lean();
 
-    console.log(`📊 Query returned ${history.length} records.`);
+    console.log(`📊 Found ${history.length} records.`);
     
     return res.status(200).json(history);
   } catch (error: any) {
-    console.error("❌ History Error:", error.message);
+    console.error("❌ History Controller Error:", error.message);
     return res.status(500).json({ message: 'Error fetching history' });
   }
 };
