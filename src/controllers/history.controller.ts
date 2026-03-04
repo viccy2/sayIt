@@ -1,37 +1,45 @@
 import { Response } from 'express';
 import History from '../models/history.model';
 
+// 1. Fetch History
 export const getUserHistory = async (req: any, res: Response): Promise<any> => {
   try {
-    // 1. Get the ID and clean it
-    const rawId = req.user?._id;
-    if (!rawId) return res.status(401).json({ message: 'Unauthorized' });
+    const userId = String(req.user?._id).trim();
 
-    // Convert to string and remove any hidden spaces/newlines
-    const cleanId = String(rawId).trim();
+    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
-    console.log(`--- DEBUGGING HISTORY ---`);
-    console.log(`Request User ID: "${cleanId}" (Length: ${cleanId.length})`);
-
-    // 2. Try to find JUST ONE record globally to compare
-    const sample = await History.findOne({}).lean();
-    if (sample) {
-      console.log(`Atlas Sample User ID: "${sample.user}" (Length: ${String(sample.user).length})`);
-      console.log(`Do they match exactly?: ${String(sample.user) === cleanId}`);
-    } else {
-      console.log("❌ Database check: The collection 'histories' appears to be EMPTY to this query.");
-    }
-
-    // 3. The Query
-    const history = await History.find({ user: cleanId })
+    const history = await History.find({ user: userId })
       .sort({ createdAt: -1 })
       .lean();
-
-    console.log(`📊 Records found for ${cleanId}: ${history.length}`);
-    console.log(`--- DEBUGGING END ---`);
     
     return res.status(200).json(history);
   } catch (error: any) {
     return res.status(500).json({ message: error.message });
+  }
+};
+
+// 2. Delete History Item
+export const deleteHistoryItem = async (req: any, res: Response): Promise<any> => {
+  try {
+    const { id } = req.params; // Get ID from URL (/api/history/:id)
+    const userId = String(req.user?._id).trim();
+
+    // Find the record first to check ownership
+    const record = await History.findById(id);
+
+    if (!record) {
+      return res.status(404).json({ message: 'Record not found' });
+    }
+
+    // SECURITY CHECK: Ensure the user trying to delete it is the owner
+    if (record.user.toString() !== userId) {
+      return res.status(403).json({ message: 'Not authorized to delete this record' });
+    }
+
+    await record.deleteOne();
+
+    return res.status(200).json({ message: 'Record deleted successfully' });
+  } catch (error: any) {
+    return res.status(500).json({ message: 'Error deleting record', error: error.message });
   }
 };
