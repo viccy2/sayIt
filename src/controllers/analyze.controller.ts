@@ -11,7 +11,7 @@ export const analyzeText = async (req: any, res: Response): Promise<any> => {
       return res.status(400).json({ message: 'Text is required' });
     }
 
-    // 1. Get the Analysis (Meaning + Language) from our new Service
+    // 1. Get the Analysis (Meaning + Language) from AI Service
     const result = await performAIAnalysis(text);
 
     let savedRecord: any = null;
@@ -26,12 +26,12 @@ export const analyzeText = async (req: any, res: Response): Promise<any> => {
       });
     }
 
-    // 3. Return response with languageCode for useSpeech to work
+    // 3. Return response with everything needed for Dashboard & Speech
     return res.json({
       language: result.detectedLanguage,
       meaning: result.meaning,
-      languageCode: result.languageCode, // CRITICAL for speech
-      speechText: result.speechText,     // CRITICAL for symbols
+      languageCode: result.languageCode,
+      speechText: result.speechText,
       _id: savedRecord ? savedRecord._id : null,
     });
   } catch (error: any) {
