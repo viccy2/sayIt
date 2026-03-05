@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { handleAnalysis } from '../controllers/analyze.controller';
-import { protect } from '../middleware/auth.middleware';
+//import { protect } from '../middleware/auth.middleware';
 const router = Router();
 
-router.post('/', protect, handleAnalysis);
+router.post('/', handleAnalysis);
 
 export default router;
