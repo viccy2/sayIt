@@ -11,22 +11,36 @@ export const analyzeText = async (req: any, res: Response): Promise<any> => {
       return res.status(400).json({ message: 'Text is required' });
     }
 
-    // 1. Get the Analysis (Meaning + Language) from AI Service
+    // 1. Get the Analysis from AI Service
     const result = await performAIAnalysis(text);
 
     let savedRecord: any = null;
 
-    // 2. SAVE TO HISTORY (Restoring your original saving logic)
+    // 2. DUPLICATE GUARD & SAVE
     if (user && user._id) {
-      savedRecord = await History.create({
-        user: user._id, 
-        originalText: text,
-        detectedLanguage: result.detectedLanguage,
-        meaning: result.meaning,
+      // Check if this user saved this EXACT text in the last 5 seconds
+      const fiveSecondsAgo = new Date(Date.now() - 5000);
+      
+      const duplicate = await History.findOne({
+        user: user._id,
+        originalText: text.trim(),
+        createdAt: { $gte: fiveSecondsAgo }
       });
+
+      if (!duplicate) {
+        savedRecord = await History.create({
+          user: user._id, 
+          originalText: text.trim(),
+          detectedLanguage: result.detectedLanguage,
+          meaning: result.meaning,
+        });
+      } else {
+        // If it's a duplicate, we use the existing record's ID
+        savedRecord = duplicate;
+      }
     }
 
-    // 3. Return response with everything needed for Dashboard & Speech
+    // 3. Return response
     return res.json({
       language: result.detectedLanguage,
       meaning: result.meaning,
