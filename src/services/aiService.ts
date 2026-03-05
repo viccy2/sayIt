@@ -1,34 +1,18 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-// Fix for Error 10: Ensure the string exists
-const apiKey = process.env.GEMINI_API_KEY;
-if (!apiKey) {
-  throw new Error("GEMINI_API_KEY is not defined in environment variables");
-}
-
-const genAI = new GoogleGenerativeAI(apiKey);
+import translate from 'google-translate-api-x';
 
 export const analyzeText = async (text: string) => {
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  try {
+    // We translate to English ('en') to get the "Meaning"
+    const res = await translate(text, { to: 'en' });
 
-  const prompt = `
-    Analyze this text: "${text}"
-    1. Detect the language.
-    2. Provide a clear meaning in English.
-    3. Provide the BCP-47 language code (e.g., 'zh-CN', 'yo-NG', 'fr-FR').
-    4. Provide 'speechText' (the original text or phonetic symbols for TTS).
-
-    Return ONLY JSON:
-    {
-      "meaning": "string",
-      "detectedLanguage": "string",
-      "languageCode": "string",
-      "speechText": "string"
-    }
-  `;
-
-  const result = await model.generateContent(prompt);
-  const response = await result.response;
-  const responseText = response.text().replace(/```json|```/g, "").trim();
-  return JSON.parse(responseText);
+    return {
+      meaning: res.text, // The English translation
+      detectedLanguage: res.from.language.iso, // e.g. 'zh-CN', 'fr', 'es'
+      languageCode: res.from.language.iso, // Used for speech accent
+      speechText: text // The original symbols/text to be spoken
+    };
+  } catch (error) {
+    console.error("Translation error:", error);
+    throw new Error("Analysis failed");
+  }
 };
