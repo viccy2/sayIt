@@ -1,5 +1,3 @@
-This is the analyze controller.ts file 
-
 import { Response } from 'express';
 import * as LanguageService from '../services/language.service';
 import * as MeaningService from '../services/meaning.service';
