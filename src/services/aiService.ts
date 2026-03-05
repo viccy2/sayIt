@@ -9,15 +9,14 @@ export const analyzeText = async (text: string) => {
     let meaning = res.text;
     let detectedLanguage = res.from.language.iso;
 
-    // IF ENGLISH: The translator just returns the same word. Let's get a definition.
+    // If English, get a real definition from the Free Dictionary API
     if (isoCode === 'en') {
       detectedLanguage = 'English';
       try {
         const dict = await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${text.trim()}`);
-        // Extract the first definition from the dictionary
         meaning = dict.data[0].meanings[0].definitions[0].definition;
       } catch (err) {
-        meaning = `English word: ${text} (No specific definition found)`;
+        meaning = `English word: ${text}`; 
       }
     }
 
