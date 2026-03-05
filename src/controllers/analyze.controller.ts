@@ -1,31 +1,41 @@
-import { Request, Response } from 'express';
-import { analyzeText } from '../services/aiService';
-import History from '../models/History'; // Ensure you import your History model
+import { Response } from 'express';
+import { analyzeText as performAIAnalysis } from '../services/aiService';
+import History from '../models/history.model';
 
-export const handleAnalysis = async (req: Request, res: Response) => {
+export const analyzeText = async (req: any, res: Response): Promise<any> => {
   try {
     const { text } = req.body;
-    const userId = (req as any).user?.id; // Assuming you have auth middleware
+    const user = req.user;
 
-    if (!text) return res.status(400).json({ error: "Text required" });
+    if (!text) {
+      return res.status(400).json({ message: 'Text is required' });
+    }
 
-    // 1. Get the AI/Translation result
-    const result = await analyzeText(text);
+    // 1. Get the Analysis (Meaning + Language) from our new Service
+    const result = await performAIAnalysis(text);
 
-    // 2. SAVE TO DATABASE
-    if (userId) {
-      await History.create({
-        userId,
+    let savedRecord: any = null;
+
+    // 2. SAVE TO HISTORY (Restoring your original saving logic)
+    if (user && user._id) {
+      savedRecord = await History.create({
+        user: user._id, 
         originalText: text,
+        detectedLanguage: result.detectedLanguage,
         meaning: result.meaning,
-        language: result.detectedLanguage,
-        languageCode: result.languageCode
       });
     }
 
-    res.json(result);
-  } catch (error) {
-    console.error("Controller Error:", error);
-    res.status(500).json({ error: "Analysis failed" });
+    // 3. Return response with languageCode for useSpeech to work
+    return res.json({
+      language: result.detectedLanguage,
+      meaning: result.meaning,
+      languageCode: result.languageCode, // CRITICAL for speech
+      speechText: result.speechText,     // CRITICAL for symbols
+      _id: savedRecord ? savedRecord._id : null,
+    });
+  } catch (error: any) {
+    console.error("Analysis Error:", error.message);
+    return res.status(500).json({ message: 'Analysis failed', error: error.message });
   }
 };
