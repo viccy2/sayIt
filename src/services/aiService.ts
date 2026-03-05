@@ -4,27 +4,31 @@ import axios from 'axios';
 export const analyzeText = async (text: string) => {
   try {
     const res = await translate(text, { to: 'en' });
-    const isEnglish = res.from.language.iso === 'en';
+    const isoCode = res.from.language.iso.toLowerCase();
+    
     let meaning = res.text;
+    let detectedLanguage = res.from.language.iso;
 
-    // IF IT'S ENGLISH: Fetch a real definition
-    if (isEnglish) {
+    // IF ENGLISH: The translator just returns the same word. Let's get a definition.
+    if (isoCode === 'en') {
+      detectedLanguage = 'English';
       try {
-        const dictRes = await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${text.trim()}`);
-        // Grab the first definition found
-        meaning = dictRes.data[0].meanings[0].definitions[0].definition;
-      } catch (e) {
-        meaning = `English term: ${text} (No dictionary definition found)`;
+        const dict = await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${text.trim()}`);
+        // Extract the first definition from the dictionary
+        meaning = dict.data[0].meanings[0].definitions[0].definition;
+      } catch (err) {
+        meaning = `English word: ${text} (No specific definition found)`;
       }
     }
 
     return {
-      meaning: meaning,
-      detectedLanguage: isEnglish ? 'English' : res.from.language.iso,
-      languageCode: res.from.language.iso,
+      meaning,
+      detectedLanguage,
+      languageCode: isoCode, 
       speechText: text
     };
   } catch (error) {
-    throw new Error("Analysis failed");
+    console.error("AI Service Error:", error);
+    throw error;
   }
 };
