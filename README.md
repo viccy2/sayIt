@@ -1,14 +1,30 @@
-# sayIt Backend 
+# sayIt - Backend 🧠
 
-A robust TypeScript-powered API for language detection, short definitions, and user history tracking.
+TypeScript Express API powered by Google Gemini AI.
 
-## Features
-- **Google OAuth:** Seamless user registration.
-- **Language Detection:** Identifies any pasted text.
-- **History Tracking:** Saves previously searched words.
-- **GitHub Actions:** Integrated CI/CD pipeline.
+## 🛠 Tech Stack
+- **Runtime:** Node.js / TypeScript
+- **Framework:** Express
+- **Database:** MongoDB (Mongoose)
+- **AI:** Google Generative AI (Gemini)
+- **Auth:** JWT (JSON Web Tokens)
 
-## Getting Started
+## 📂 Structure
+- `/src/controllers`: Logic for AI analysis & user auth.
+- `/src/models`: Schemas for User and History.
+- `/src/middleware`: Auth guard for protected routes.
+- `/src/services`: Gemini AI integration.
+
+## 🚀 Setup
 1. `npm install`
-2. Configure `.env` with your Mongo and Google credentials.
-3. `npm run dev` to start the development server.
+2. Create `.env`:
+   - `PORT=5000`
+   - `MONGO_URI=your_mongodb_url`
+   - `JWT_SECRET=your_secret_key`
+   - `GEMINI_API_KEY=your_google_key`
+3. `npm start`
+
+## 📡 Key Endpoints
+- `POST /auth/register` - Create account
+- `POST /analyze` - AI language analysis
+- `GET /history` - Retrieve user practice list
