@@ -1,5 +1,8 @@
+This is the analyze controller.ts file 
+
 import { Response } from 'express';
-import * as AIService from '../services/ai.service'; // We will create this
+import * as LanguageService from '../services/language.service';
+import * as MeaningService from '../services/meaning.service';
 import History from '../models/history.model';
 
 export const analyzeText = async (req: any, res: Response): Promise<any> => {
@@ -7,34 +10,33 @@ export const analyzeText = async (req: any, res: Response): Promise<any> => {
     const { text } = req.body;
     const user = req.user;
 
-    if (!text || text.trim().length === 0) {
+    if (!text) {
       return res.status(400).json({ message: 'Text is required' });
     }
 
-    // NEW: One single call to a "Universal" AI service
-    // This returns: { language, translation, meaning }
-    const analysis = await AIService.getUniversalAnalysis(text);
+    // AI logic (Assuming these services are working)
+    const language = await LanguageService.detectLanguage(text);
+    const meaning = await MeaningService.getShortMeaning(text);
 
     let savedRecord: any = null;
 
     if (user && user._id) {
+      // CRITICAL FIX: Changed 'userId' to 'user' to match the Model
       savedRecord = await History.create({
         user: user._id, 
         originalText: text,
-        detectedLanguage: analysis.language,
-        meaning: analysis.meaning, // This will now contain the translation + context
+        detectedLanguage: language,
+        meaning: meaning,
       });
     }
 
     return res.json({
-      ...analysis,
+      language,
+      meaning,
       _id: savedRecord ? savedRecord._id : null,
     });
   } catch (error: any) {
     console.error("Analysis Error:", error.message);
-    return res.status(500).json({ 
-      message: 'Analysis failed', 
-      error: 'The AI could not process this script. Please try again.' 
-    });
+    return res.status(500).json({ message: 'Analysis failed', error: error.message });
   }
 };
