@@ -1,18 +1,24 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Fix for Error 10: Ensure the string exists
+const apiKey = process.env.GEMINI_API_KEY;
+if (!apiKey) {
+  throw new Error("GEMINI_API_KEY is not defined in environment variables");
+}
+
+const genAI = new GoogleGenerativeAI(apiKey);
 
 export const analyzeText = async (text: string) => {
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   const prompt = `
-    Analyze the following text: "${text}"
+    Analyze this text: "${text}"
     1. Detect the language.
-    2. Provide a clear, concise meaning in English.
-    3. Provide the BCP-47 language code (e.g., 'zh-CN' for Chinese, 'en-US' for English, 'yo-NG' for Yoruba).
-    4. Provide a 'speechText' field. If the input is symbols (like Chinese characters), this should be the native characters so the TTS engine can read them.
+    2. Provide a clear meaning in English.
+    3. Provide the BCP-47 language code (e.g., 'zh-CN', 'yo-NG', 'fr-FR').
+    4. Provide 'speechText' (the original text or phonetic symbols for TTS).
 
-    Return ONLY a JSON object in this format:
+    Return ONLY JSON:
     {
       "meaning": "string",
       "detectedLanguage": "string",
@@ -23,5 +29,6 @@ export const analyzeText = async (text: string) => {
 
   const result = await model.generateContent(prompt);
   const response = await result.response;
-  return JSON.parse(response.text());
+  const responseText = response.text().replace(/```json|```/g, "").trim();
+  return JSON.parse(responseText);
 };
