@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { analyzeText } from '../services/aiService'; // Ensure this matches the filename
+import { analyzeText } from '../services/aiService';
 
 export const handleAnalysis = async (req: Request, res: Response) => {
   try {
@@ -11,7 +11,7 @@ export const handleAnalysis = async (req: Request, res: Response) => {
     const result = await analyzeText(text);
     res.json(result);
   } catch (error) {
-    console.error("Analysis Controller Error:", error);
-    res.status(500).json({ error: "Analysis failed" });
+    console.error("Controller Error:", error);
+    res.status(500).json({ error: "Failed to analyze text" });
   }
 };
