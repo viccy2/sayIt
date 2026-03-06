@@ -5,7 +5,7 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 
 // Config & Middleware Imports
-import connectDB from './config/database'; 
+import connectDB from './config/database'; // Ensure this matches your file path
 import { errorHandler } from './middleware/error.middleware';
 import { logger } from './middleware/logger.middleware';
 
@@ -19,104 +19,75 @@ dotenv.config();
 const app: Application = express();
 
 /**
- * 1. Security & Logging Middleware
- * Modified Helmet to allow Cross-Origin requests from your frontend
- */
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }
-})); 
-app.use(morgan('dev')); 
-app.use(logger); 
+ * 1. Security & Logging Middleware
+ */
+app.use(helmet()); 
+app.use(morgan('dev')); 
+app.use(logger); 
 
 /**
- * 2. Optimized CORS Configuration
- * This version explicitly handles the Vercel production URL and local dev.
- */
-const allowedOrigins = [
-  'https://say-it-frontend.vercel.app',  // Your production frontend
-  'http://localhost:5173',          // Local development
-  process.env.FRONTEND_URL          // From your Environment Variables
-].filter(Boolean) as string[];      // Remove undefined values
-
+ * 2. CORS Configuration
+ */
 app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl)
-    if (!origin) return callback(null, true);
-    
-    // Check if the origin is in our allowed list
-    const isAllowed = allowedOrigins.some(allowed => 
-      origin === allowed || origin === `${allowed}/`
-    );
-
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      console.error(`❌ CORS Blocked for origin: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true
 }));
 
-// Explicitly handle Preflight requests
-app.options('*', cors());
-
 /**
- * 3. Body Parsers
- */
+ * 3. Body Parsers
+ */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 /**
- * 4. Database Connection Middleware
- */
+ * 4. Database Connection Middleware (CRITICAL FOR VERCEL)
+ * This ensures the database is connected BEFORE any route logic runs.
+ * It prevents the 'Buffering Timeout' error.
+ */
 app.use(async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    await connectDB();
-    next();
-  } catch (err: any) {
-    console.error('💥 Database Middleware Error:', err.message);
-    res.status(500).json({ 
-      message: 'Database connection failed.',
-      error: process.env.NODE_ENV === 'development' ? err.message : undefined 
-    });
-  }
+  try {
+    await connectDB();
+    next();
+  } catch (err: any) {
+    console.error('💥 Database Middleware Error:', err.message);
+    res.status(500).json({ 
+      message: 'Database connection failed. Please try again later.',
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined 
+    });
+  }
 });
 
 /**
- * 5. API Routes
- */
+ * 5. API Routes
+ */
 app.use('/api/auth', authRoutes);
 app.use('/api/analyze', analyzeRoutes);
 app.use('/api/history', historyRoutes);
 
 /**
- * 6. Health Check Route
- */
+ * 6. Health Check Route
+ * Useful for verifying if the backend is alive on Vercel.
+ */
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'OK', 
-    message: 'Server is running',
-    timestamp: new Date().toISOString()
-  });
+  res.status(200).json({ status: 'OK', message: 'Server is running' });
 });
 
 /**
- * 7. Error Handling
- */
+ * 7. Error Handling
+ * This must be the last middleware.
+ */
 app.use(errorHandler);
 
 /**
- * 8. Server Start
- */
+ * 8. Server Start (Local Development Only)
+ * Vercel uses the exported 'app' and doesn't require app.listen().
+ */
 const PORT = process.env.PORT || 5000;
 
 if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
-    console.log(`🚀 Local Server active on port ${PORT}`);
-  });
+  app.listen(PORT, () => {
+    console.log(`🚀 Local Server active on port ${PORT}`);
+  });
 }
 
 export default app;
