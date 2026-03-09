@@ -4,8 +4,13 @@ import crypto from 'crypto';
 import User from '../models/user.model';
 import sendEmail from '../utils/sendEmail';
 
+/**
+ * @desc    Generate JWT Token
+ */
 const generateToken = (id: string): string => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'your_secret_key', { expiresIn: '30d' });
+  return jwt.sign({ id }, process.env.JWT_SECRET || 'your_secret_key', {
+    expiresIn: '30d',
+  });
 };
 
 /**
@@ -69,13 +74,10 @@ export const login = async (req: Request, res: Response): Promise<any> => {
 /**
  * @route   GET /api/auth/current_user
  * @desc    Get current user profile
- * @access  Private (Accessed via 'protect' middleware)
  */
 export const getCurrentUser = async (req: any, res: Response): Promise<any> => {
   try {
-    // req.user is attached by your 'protect' middleware
     const user = await User.findById(req.user._id).select('-password');
-
     if (user) {
       res.json(user);
     } else {
@@ -88,6 +90,7 @@ export const getCurrentUser = async (req: any, res: Response): Promise<any> => {
 
 /**
  * @route   POST /api/auth/forgot-password
+ * @desc    Generate reset token and send branded email
  */
 export const forgotPassword = async (req: Request, res: Response): Promise<any> => {
   const { email } = req.body;
@@ -102,51 +105,51 @@ export const forgotPassword = async (req: Request, res: Response): Promise<any> 
 
     // 2. Save Hashed Token to DB
     user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    user.resetPasswordExpire = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+    user.resetPasswordExpire = new Date(Date.now() + 10 * 60 * 1000); // 10 mins expiry
 
     await user.save({ validateBeforeSave: false });
 
-    // 3. Send Email
-    // ... inside forgotPassword function ...
+    // 3. Prepare URL and HTML Template
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
-const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+    const htmlMessage = `
+      <div style="font-family: 'Plus Jakarta Sans', Helvetica, Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div style="background-color: #6366f1; color: white; width: 40px; height: 40px; line-height: 40px; border-radius: 10px; display: inline-block; font-weight: bold; font-size: 20px;">S</div>
+          <h1 style="color: #1e293b; margin-top: 10px;">say<span style="color: #6366f1;">It</span></h1>
+        </div>
+        <h2 style="color: #1e293b; text-align: center;">Password Reset Request</h2>
+        <p style="color: #64748b; font-size: 16px; line-height: 1.6;">
+          Hello, <br/><br/>
+          We received a request to reset the password for your SayIt account. Click the button below to choose a new one. This link is valid for <b>10 minutes</b>.
+        </p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${resetUrl}" style="background-color: #1e293b; color: white; padding: 14px 24px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block;">Reset Password</a>
+        </div>
+        <p style="color: #94a3b8; font-size: 12px; text-align: center; margin-top: 40px;">
+          If you did not request this, you can safely ignore this email. <br/>
+          &copy; 2026 SayIt Language Engine
+        </p>
+      </div>
+    `;
 
-// Professional HTML Template
-const htmlMessage = `
-  <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px;">
-    <div style="text-align: center; margin-bottom: 20px;">
-      <div style="background-color: #6366f1; color: white; width: 40px; height: 40px; line-height: 40px; border-radius: 10px; display: inline-block; font-weight: bold; font-size: 20px;">S</div>
-      <h1 style="color: #1e293b; margin-top: 10px;">say<span style="color: #6366f1;">It</span></h1>
-    </div>
-    <h2 style="color: #1e293b;">Password Reset Request</h2>
-    <p style="color: #64748b; font-size: 16px; line-height: 1.6;">
-      Hello, <br/><br/>
-      We received a request to reset the password for your SayIt account. Click the button below to choose a new one. This link is valid for <b>10 minutes</b>.
-    </p>
-    <div style="text-align: center; margin: 30px 0;">
-      <a href="${resetUrl}" style="background-color: #1e293b; color: white; padding: 14px 24px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block;">Reset Password</a>
-    </div>
-    <p style="color: #94a3b8; font-size: 12px; text-align: center; margin-top: 40px;">
-      If you did not request this, you can safely ignore this email. <br/>
-      &copy; 2026 SayIt Language Engine
-    </p>
-  </div>
-`;
-
-try {
-  await sendEmail({
-    email: user.email,
-    subject: 'Reset your SayIt password',
-    message: `Reset your password here: ${resetUrl}`, // Fallback
-    html: htmlMessage,
-  });
-  res.status(200).json({ message: 'Branded reset link sent!' });
-}
+    // 4. Attempt to send email
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: 'Reset your SayIt password',
+        message: `Reset your password here: ${resetUrl}`,
+        html: htmlMessage,
+      });
+      return res.status(200).json({ message: 'Branded reset link sent!' });
     } catch (err) {
+      // Clear reset fields if mail delivery fails
       user.resetPasswordToken = undefined;
       user.resetPasswordExpire = undefined;
       await user.save({ validateBeforeSave: false });
-      return res.status(500).json({ message: 'Email could not be sent' });
+      return res.status(500).json({ message: 'Email could not be sent. Please try again later.' });
+    }
+
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
@@ -154,6 +157,7 @@ try {
 
 /**
  * @route   POST /api/auth/reset-password/:token
+ * @desc    Validate token and update password
  */
 export const resetPassword = async (req: Request, res: Response): Promise<any> => {
   try {
@@ -168,9 +172,11 @@ export const resetPassword = async (req: Request, res: Response): Promise<any> =
       return res.status(400).json({ message: 'Token is invalid or has expired' });
     }
 
+    // Update password and clear reset fields
     user.password = req.body.password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
+    
     await user.save();
 
     res.status(200).json({ message: 'Password updated successfully!' });
