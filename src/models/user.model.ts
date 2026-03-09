@@ -10,7 +10,11 @@ export interface IUser extends Document {
   email: string;
   password?: string;
   googleId?: string;
-  // Added fields for password reset logic
+  // Verification Fields
+  isVerified: boolean;
+  verificationToken?: string;
+  verificationTokenExpire?: Date;
+  // Password Reset Fields
   resetPasswordToken?: string;
   resetPasswordExpire?: Date;
   createdAt: Date;
@@ -44,7 +48,14 @@ const UserSchema: Schema = new Schema(
       unique: true, 
       sparse: true 
     },
-    // Added to store the hashed reset token and its expiry time
+    // Verification Schema
+    isVerified: { 
+      type: Boolean, 
+      default: false 
+    },
+    verificationToken: String,
+    verificationTokenExpire: Date,
+    // Password Reset Schema
     resetPasswordToken: String,
     resetPasswordExpire: Date,
   },
