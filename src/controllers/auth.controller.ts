@@ -69,7 +69,6 @@ export const register = async (req: Request, res: Response): Promise<any> => {
       });
       res.status(201).json({ message: 'Registration successful! Please check your email to verify your account.' });
     } catch (err) {
-      // If email fails, we keep the user but they'll need a "resend" option later
       res.status(201).json({ message: 'User created, but verification email failed to send.' });
     }
   } catch (error: any) {
@@ -106,6 +105,49 @@ export const verifyEmail = async (req: Request, res: Response): Promise<any> => 
 };
 
 /**
+ * @route   POST /api/auth/resend-verification
+ * @desc    Resend verification email if user is not verified
+ */
+export const resendVerification = async (req: Request, res: Response): Promise<any> => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (user.isVerified) return res.status(400).json({ message: 'Account is already verified' });
+
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    user.verificationToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
+    user.verificationTokenExpire = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await user.save();
+
+    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
+    const htmlMessage = `
+      <div style="font-family: 'Plus Jakarta Sans', Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px;">
+        <h2 style="color: #6366f1; text-align: center;">New Verification Link</h2>
+        <p style="color: #64748b; text-align: center;">Click below to verify your account. This link expires in 24 hours.</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${verifyUrl}" style="background-color: #6366f1; color: white; padding: 14px 24px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block;">Verify Email</a>
+        </div>
+      </div>
+    `;
+
+    await sendEmail({
+      email: user.email,
+      subject: 'Resend: Verify your SayIt account',
+      message: `Verify here: ${verifyUrl}`,
+      html: htmlMessage,
+    });
+
+    res.status(200).json({ message: 'Verification email resent!' });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
  * @route   POST /api/auth/login
  */
 export const login = async (req: Request, res: Response): Promise<any> => {
@@ -115,7 +157,6 @@ export const login = async (req: Request, res: Response): Promise<any> => {
     const user = await User.findOne({ email });
 
     if (user && (await user.comparePassword(password))) {
-      // BLOCK LOGIN IF NOT VERIFIED
       if (!user.isVerified) {
         return res.status(401).json({ message: 'Please verify your email address before logging in.' });
       }
