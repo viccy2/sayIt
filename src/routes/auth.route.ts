@@ -35,4 +35,6 @@ router.post('/reset-password/:token', authController.resetPassword);
  */
 router.get('/current_user', protect, authController.getCurrentUser);
 
+router.get('/verify-email/:token', authController.verifyEmail);
+
 export default router;
