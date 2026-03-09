@@ -37,5 +37,25 @@ router.post('/resend-verification', authLimiter,  authController.resendVerificat
 router.get('/current_user', protect, authController.getCurrentUser);
 
 router.get('/verify-email/:token', authController.verifyEmail);
+// DANGER: This will delete all data. Use only for development.
+router.get('/dev/clear-database', async (req, res) => {
+  try {
+    // 1. Clear History first (to avoid foreign key constraint errors)
+    await prisma.history.deleteMany({});
+    
+    // 2. Clear Users
+    await prisma.user.deleteMany({});
+
+    res.status(200).send(`
+      <div style="font-family: sans-serif; text-align: center; padding-top: 50px;">
+        <h1 style="color: #16a34a;">Database Wiped!</h1>
+        <p>All users and history records have been deleted.</p>
+        <a href="/">Go back to Login</a>
+      </div>
+    `);
+  } catch (error: any) {
+    res.status(500).send("Error clearing database: " + error.message);
+  }
+});
 
 export default router;
