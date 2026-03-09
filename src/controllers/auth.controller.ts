@@ -123,7 +123,7 @@ export const resendVerification = async (req: Request, res: Response): Promise<a
 
     await user.save();
 
-    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
+    const verifyUrl = `${process.env.FRONTEND_URL}verify-email/${verificationToken}`;
     const htmlMessage = `
       <div style="font-family: 'Plus Jakarta Sans', Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px;">
         <h2 style="color: #6366f1; text-align: center;">New Verification Link</h2>
