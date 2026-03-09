@@ -107,16 +107,41 @@ export const forgotPassword = async (req: Request, res: Response): Promise<any> 
     await user.save({ validateBeforeSave: false });
 
     // 3. Send Email
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
-    const message = `You requested a password reset. Please click the link below to set a new password (valid for 10 minutes):\n\n${resetUrl}\n\nIf you did not request this, please ignore this email.`;
+    // ... inside forgotPassword function ...
 
-    try {
-      await sendEmail({
-        email: user.email,
-        subject: 'SayIt - Password Reset Request',
-        message,
-      });
-      res.status(200).json({ message: 'Reset link sent to your email!' });
+const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+
+// Professional HTML Template
+const htmlMessage = `
+  <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px;">
+    <div style="text-align: center; margin-bottom: 20px;">
+      <div style="background-color: #6366f1; color: white; width: 40px; height: 40px; line-height: 40px; border-radius: 10px; display: inline-block; font-weight: bold; font-size: 20px;">S</div>
+      <h1 style="color: #1e293b; margin-top: 10px;">say<span style="color: #6366f1;">It</span></h1>
+    </div>
+    <h2 style="color: #1e293b;">Password Reset Request</h2>
+    <p style="color: #64748b; font-size: 16px; line-height: 1.6;">
+      Hello, <br/><br/>
+      We received a request to reset the password for your SayIt account. Click the button below to choose a new one. This link is valid for <b>10 minutes</b>.
+    </p>
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${resetUrl}" style="background-color: #1e293b; color: white; padding: 14px 24px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block;">Reset Password</a>
+    </div>
+    <p style="color: #94a3b8; font-size: 12px; text-align: center; margin-top: 40px;">
+      If you did not request this, you can safely ignore this email. <br/>
+      &copy; 2026 SayIt Language Engine
+    </p>
+  </div>
+`;
+
+try {
+  await sendEmail({
+    email: user.email,
+    subject: 'Reset your SayIt password',
+    message: `Reset your password here: ${resetUrl}`, // Fallback
+    html: htmlMessage,
+  });
+  res.status(200).json({ message: 'Branded reset link sent!' });
+}
     } catch (err) {
       user.resetPasswordToken = undefined;
       user.resetPasswordExpire = undefined;
