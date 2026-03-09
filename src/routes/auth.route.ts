@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import * as authController from '../controllers/auth.controller';
 import { protect } from '../middleware/auth.middleware';
-
+import { authLimiter } from '../middleware/rateLimiter';
 const router = Router();
 
 /**
@@ -20,7 +20,7 @@ router.post('/login', authController.login);
  * @route   POST /api/auth/forgot-password
  * @desc    Send password reset email
  */
-router.post('/forgot-password', authController.forgotPassword);
+router.post('/forgot-password', authLimiter, authController.forgotPassword);
 
 /**
  * @route   POST /api/auth/reset-password/:token
@@ -28,7 +28,7 @@ router.post('/forgot-password', authController.forgotPassword);
  */
 router.post('/reset-password/:token', authController.resetPassword);
 
-router.post('/resend-verification', authController.resendVerification);
+router.post('/resend-verification', authLimiter,  authController.resendVerification);
 /**
  * @route   GET /api/auth/current_user
  * @desc    Get current user profile (This fixes your 404/Redirect loop)
