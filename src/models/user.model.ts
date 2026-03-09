@@ -1,21 +1,16 @@
 import mongoose, { Schema, Document, Types } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
-/**
- * @interface IUser
- */
 export interface IUser extends Document {
   _id: Types.ObjectId; 
   username: string;
   email: string;
   password?: string;
   googleId?: string;
-  // Verification Fields (Now used for 6-digit OTP)
   isVerified: boolean;
-  verificationToken?: string; // Will store hashed 6-digit code
+  verificationToken?: string;
   verificationTokenExpire?: Date;
-  // Password Reset Fields (Now used for 6-digit OTP)
-  resetPasswordToken?: string; // Will store hashed 6-digit code
+  resetPasswordToken?: string;
   resetPasswordExpire?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -24,41 +19,19 @@ export interface IUser extends Document {
 
 const UserSchema: Schema = new Schema(
   {
-    username: { 
-      type: String, 
-      required: true, 
-      unique: true, 
-      trim: true 
-    },
-    email: { 
-      type: String, 
-      required: true, 
-      unique: true, 
-      lowercase: true, 
-      trim: true 
-    },
+    username: { type: String, required: true, unique: true, trim: true },
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { 
       type: String,
-      required: function(this: any) {
-        return !this.googleId;
-      }
+      // select: false, // Optional: prevents password from being returned in queries by default
+      required: function(this: any) { return !this.googleId; }
     },
-    googleId: { 
-      type: String, 
-      unique: true, 
-      sparse: true 
-    },
-    // Verification Schema
-    isVerified: { 
-      type: Boolean, 
-      default: false 
-    },
-    // We keep these names to avoid breaking existing queries, 
-    // but they will now hold 6-digit hashed codes.
-    verificationToken: String,
+    googleId: { type: String, unique: true, sparse: true },
+    isVerified: { type: Boolean, default: false },
+    // Fields for 6-digit OTP
+    verificationToken: { type: String, select: false },
     verificationTokenExpire: Date,
-    // Password Reset Schema
-    resetPasswordToken: String,
+    resetPasswordToken: { type: String, select: false },
     resetPasswordExpire: Date,
   },
   { timestamps: true }
@@ -68,6 +41,7 @@ const UserSchema: Schema = new Schema(
  * Password Hashing Middleware
  */
 UserSchema.pre<IUser>('save', async function (next) {
+  // Only hash the password if it has been modified (or is new)
   if (!this.password || !this.isModified('password')) {
     return next();
   }
