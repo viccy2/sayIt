@@ -208,7 +208,7 @@ export const forgotPassword = async (req: Request, res: Response): Promise<any> 
 
     await user.save({ validateBeforeSave: false });
 
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+    const resetUrl = `${process.env.FRONTEND_URL}reset-password/${resetToken}`;
 
     const htmlMessage = `
       <div style="font-family: 'Plus Jakarta Sans', Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px;">
