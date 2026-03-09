@@ -10,12 +10,12 @@ export interface IUser extends Document {
   email: string;
   password?: string;
   googleId?: string;
-  // Verification Fields
+  // Verification Fields (Now used for 6-digit OTP)
   isVerified: boolean;
-  verificationToken?: string;
+  verificationToken?: string; // Will store hashed 6-digit code
   verificationTokenExpire?: Date;
-  // Password Reset Fields
-  resetPasswordToken?: string;
+  // Password Reset Fields (Now used for 6-digit OTP)
+  resetPasswordToken?: string; // Will store hashed 6-digit code
   resetPasswordExpire?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -53,6 +53,8 @@ const UserSchema: Schema = new Schema(
       type: Boolean, 
       default: false 
     },
+    // We keep these names to avoid breaking existing queries, 
+    // but they will now hold 6-digit hashed codes.
     verificationToken: String,
     verificationTokenExpire: Date,
     // Password Reset Schema
