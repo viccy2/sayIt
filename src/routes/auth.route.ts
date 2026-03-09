@@ -17,6 +17,18 @@ router.post('/register', authController.register);
 router.post('/login', authController.login);
 
 /**
+ * @route   POST /api/auth/forgot-password
+ * @desc    Send password reset email
+ */
+router.post('/forgot-password', authController.forgotPassword);
+
+/**
+ * @route   POST /api/auth/reset-password/:token
+ * @desc    Reset password using token
+ */
+router.post('/reset-password/:token', authController.resetPassword);
+
+/**
  * @route   GET /api/auth/current_user
  * @desc    Get current user profile (This fixes your 404/Redirect loop)
  * @access  Private
