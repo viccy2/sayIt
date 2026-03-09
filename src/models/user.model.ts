@@ -3,15 +3,16 @@ import bcrypt from 'bcryptjs';
 
 /**
  * @interface IUser
- * This defines the shape of your User document in TypeScript.
- * We include Types.ObjectId to help fix the "Argument not assignable" errors.
  */
 export interface IUser extends Document {
   _id: Types.ObjectId; 
   username: string;
   email: string;
-  password?: string; // Optional to allow for future Google Auth
+  password?: string;
   googleId?: string;
+  // Added fields for password reset logic
+  resetPasswordToken?: string;
+  resetPasswordExpire?: Date;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(password: string): Promise<boolean>;
@@ -34,7 +35,6 @@ const UserSchema: Schema = new Schema(
     },
     password: { 
       type: String,
-      // Only required if no googleId exists
       required: function(this: any) {
         return !this.googleId;
       }
@@ -42,15 +42,17 @@ const UserSchema: Schema = new Schema(
     googleId: { 
       type: String, 
       unique: true, 
-      sparse: true // Allows multiple nulls for non-Google users
+      sparse: true 
     },
+    // Added to store the hashed reset token and its expiry time
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
   },
   { timestamps: true }
 );
 
 /**
  * Password Hashing Middleware
- * Automatically hashes the password before saving to MongoDB.
  */
 UserSchema.pre<IUser>('save', async function (next) {
   if (!this.password || !this.isModified('password')) {
