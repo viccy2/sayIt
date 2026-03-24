@@ -18,20 +18,18 @@ export const getUserHistory = async (req: any, res: Response): Promise<any> => {
   }
 };
 
-// 2. Delete History Item
+// 2. Delete Single History Item
 export const deleteHistoryItem = async (req: any, res: Response): Promise<any> => {
   try {
-    const { id } = req.params; // Get ID from URL (/api/history/:id)
+    const { id } = req.params;
     const userId = String(req.user?._id).trim();
 
-    // Find the record first to check ownership
     const record = await History.findById(id);
 
     if (!record) {
       return res.status(404).json({ message: 'Record not found' });
     }
 
-    // SECURITY CHECK: Ensure the user trying to delete it is the owner
     if (record.user.toString() !== userId) {
       return res.status(403).json({ message: 'Not authorized to delete this record' });
     }
@@ -41,5 +39,29 @@ export const deleteHistoryItem = async (req: any, res: Response): Promise<any> =
     return res.status(200).json({ message: 'Record deleted successfully' });
   } catch (error: any) {
     return res.status(500).json({ message: 'Error deleting record', error: error.message });
+  }
+};
+
+// 3. Clear All History for Authenticated User
+export const clearUserHistory = async (req: any, res: Response): Promise<any> => {
+  try {
+    const userId = String(req.user?._id).trim();
+
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    // Delete all documents owned by this user
+    const result = await History.deleteMany({ user: userId });
+
+    return res.status(200).json({ 
+      message: 'All history cleared successfully',
+      count: result.deletedCount 
+    });
+  } catch (error: any) {
+    return res.status(500).json({ 
+      message: 'Error clearing history', 
+      error: error.message 
+    });
   }
 };
