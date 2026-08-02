@@ -41,7 +41,6 @@ const UserSchema: Schema = new Schema(
  * Password Hashing Middleware
  */
 UserSchema.pre<IUser>('save', async function (next) {
-  // Only hash the password if it has been modified (or is new)
   if (!this.password || !this.isModified('password')) {
     return next();
   }
