@@ -1,6 +1,6 @@
 # sayIt - Backend 
 
-TypeScript Express API powered by Google Gemini AI.
+TypeScript-powered API for language detection, short definitions, and user history tracking.
 
 ## 🛠 Tech Stack
 - **Runtime:** Node.js / TypeScript
