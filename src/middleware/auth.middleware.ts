@@ -24,14 +24,12 @@ export const protect = async (req: Request, res: Response, next: NextFunction): 
       const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as DecodedToken;
 
       // 3. Get user from the token and attach to the request object
-      // We exclude the password for security
       const user = await User.findById(decoded.id).select('-password');
 
       if (!user) {
         return res.status(401).json({ message: 'User associated with this token no longer exists.' });
       }
 
-      // Attach user to req.user (This works because of our src/types/express.d.ts)
       req.user = user;
       
       return next();
