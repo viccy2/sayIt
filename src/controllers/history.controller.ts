@@ -50,8 +50,7 @@ export const clearUserHistory = async (req: any, res: Response): Promise<any> =>
     if (!userId) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
-
-    // Delete all documents owned by this user
+    
     const result = await History.deleteMany({ user: userId });
 
     return res.status(200).json({ 
