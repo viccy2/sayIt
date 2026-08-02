@@ -1,6 +1,6 @@
 # sayIt - Backend 
 
-TypeScript-powered API for language detection, short definitions, and user history tracking.
+TypeScript-powered system for language detection, short definitions, and user history tracking.
 
 ## 🛠 Tech Stack
 - **Runtime:** Node.js / TypeScript
