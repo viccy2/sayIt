@@ -34,7 +34,6 @@ app.use(logger);
 const allowedOrigins = [
   'https://say-it-frontend.vercel.app',    // Primary production frontend
   'http://localhost:5173',            // Vite local development
-  'http://localhost:3000',            // Alternative local development
   process.env.FRONTEND_URL            // Dynamic ENV URL
 ].filter(Boolean) as string[];
 
@@ -53,7 +52,7 @@ app.use(cors({
     if (isAllowed) {
       callback(null, true);
     } else {
-      console.warn(`⚠️ CORS blocked request from: ${origin}`);
+      console.warn(` CORS blocked request from: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -73,15 +72,13 @@ app.use(express.urlencoded({ extended: true }));
 
 /**
  * 4. Database Connection Middleware
- * Note: In production, it's often better to connect once at startup 
- * rather than via middleware on every request to avoid overhead.
  */
 app.use(async (req: Request, res: Response, next: NextFunction) => {
   try {
     await connectDB();
     next();
   } catch (err: any) {
-    console.error('💥 Database Connection Error:', err.message);
+    console.error(' Database Connection Error:', err.message);
     res.status(500).json({ 
       message: 'Database connection failed.',
       error: process.env.NODE_ENV === 'development' ? err.message : undefined 
