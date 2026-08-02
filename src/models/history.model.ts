@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IHistory extends Document {
-  user: string; // Changed to string to match your Atlas data
+  user: string; 
   originalText: string;
   meaning: string;
   detectedLanguage: string;
@@ -10,7 +10,7 @@ export interface IHistory extends Document {
 
 const HistorySchema: Schema = new Schema({
   user: { 
-    type: String, // Matching the string format in your sample
+    type: String, 
     required: true,
     index: true 
   },
@@ -21,5 +21,4 @@ const HistorySchema: Schema = new Schema({
   timestamps: true 
 });
 
-// Forcing it to use 'histories' as confirmed in your Atlas
 export default mongoose.model<IHistory>('History', HistorySchema, 'histories');
