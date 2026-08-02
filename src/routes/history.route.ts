@@ -8,13 +8,13 @@ import { protect } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// GET /api/history -> List all
+// GET /api/history -> list all
 router.get('/', protect, getUserHistory);
 
-// DELETE /api/history -> Clear all records for the user
+// DELETE /api/history -> clear all 
 router.delete('/', protect, clearUserHistory);
 
-// DELETE /api/history/:id -> Remove one specific record
+// DELETE /api/history/:id -> Remove one 
 router.delete('/:id', protect, deleteHistoryItem); 
 
 export default router;
