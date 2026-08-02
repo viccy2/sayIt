@@ -36,7 +36,7 @@ export const register = async (req: Request, res: Response): Promise<any> => {
     await User.create({
       username,
       email,
-      password, // Assumes pre-save hook in user.model.ts handles hashing
+      password,
       verificationToken: hashedOTP,
       verificationTokenExpire: new Date(Date.now() + 15 * 60 * 1000), 
     });
@@ -137,8 +137,7 @@ export const resetPassword = async (req: Request, res: Response): Promise<any> =
     });
 
     if (!user) return res.status(400).json({ message: 'Invalid or expired code.' });
-
-    // Important: Re-assigning password triggers the 'pre-save' hashing hook in your model
+    
     user.password = password; 
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
