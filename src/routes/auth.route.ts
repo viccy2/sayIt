@@ -26,22 +26,14 @@ router.get('/current_user', protect, authController.getCurrentUser);
 
 /**
  * @route   GET /api/auth/dev/clear-database
- * @desc    Nuclear reset using Mongoose for Users and Histories
+ * @desc    reset using Mongoose for Users and Histories
  */
 router.get('/dev/clear-database', async (req: Request, res: Response) => {
   try {
-    // 1. Get counts (using your specific history model)
     const userCount = await User.countDocuments();
-    
-    // Mongoose will use the 'histories' collection defined in your model
     const historyCount = await History.countDocuments();
-
-    // 2. Perform Deletions
-    // We delete histories first to avoid orphaned data
     await History.deleteMany({});
     await User.deleteMany({});
-
-    // 3. Return a clean UI response
     res.status(200).send(`
       <div style="font-family: 'Plus Jakarta Sans', sans-serif; text-align: center; padding: 60px 20px; background-color: #f8fafc; min-height: 100vh; display: flex; align-items: center; justify-content: center;">
         <div style="max-width: 500px; width: 100%; background: white; padding: 40px; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;">
