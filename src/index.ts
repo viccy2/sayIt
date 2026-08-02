@@ -19,7 +19,7 @@ dotenv.config();
 const app: Application = express();
 
 /**
- * 1. Security & Logging Middleware
+ * Security & Logging Middleware
  */
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
@@ -28,7 +28,7 @@ app.use(morgan('dev'));
 app.use(logger); 
 
 /**
- * 2. Optimized CORS Configuration
+ * CORS Configuration
  * Hardcoded production URL for reliability, plus environment flexibility.
  */
 const allowedOrigins = [
@@ -65,13 +65,13 @@ app.use(cors({
 app.options('*', cors());
 
 /**
- * 3. Body Parsers
+ * Body Parsers
  */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 /**
- * 4. Database Connection Middleware
+ * Database Connection Middleware
  */
 app.use(async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -87,14 +87,14 @@ app.use(async (req: Request, res: Response, next: NextFunction) => {
 });
 
 /**
- * 5. API Routes
+ * API Routes
  */
 app.use('/api/auth', authRoutes);
 app.use('/api/analyze', analyzeRoutes);
 app.use('/api/history', historyRoutes);
 
 /**
- * 6. Health Check Route
+ * Health Check Route
  */
 app.get('/api/health', (req, res) => {
   res.status(200).json({ 
@@ -105,17 +105,15 @@ app.get('/api/health', (req, res) => {
 });
 
 /**
- * 7. Error Handling
+ * Error Handling
  */
 app.use(errorHandler);
 
 /**
- * 8. Server Start
+ * Server Start
  */
 const PORT = process.env.PORT || 5000;
 
-// On platforms like Vercel/Render, the app is exported; 
-// locally, we listen on the port.
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
     console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
