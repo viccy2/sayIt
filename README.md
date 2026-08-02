@@ -1,4 +1,4 @@
-# sayIt - Backend 🧠
+# sayIt - Backend 
 
 TypeScript Express API powered by Google Gemini AI.
 
