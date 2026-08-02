@@ -10,31 +10,31 @@ export const analyzeText = async (req: any, res: Response): Promise<any> => {
 
     if (!cleanText) return res.status(400).json({ message: 'Text is required' });
 
-    // 1. Get the Analysis from AI Service
+    // get Analysis from AI Service
     const result = await performAIAnalysis(cleanText);
 
     let savedRecord: any = null;
 
     if (user && user._id) {
-      // LOGIC: Check if this user has EVER saved this EXACT text before
+      //  if user has saved exact text before
       const existingEntry = await History.findOne({
         user: user._id,
         originalText: cleanText
       });
 
       if (!existingEntry) {
-        // Only save if it's a brand new word for this user
+        // save brand new word for this user
         savedRecord = await History.create({
           user: user._id, 
           originalText: cleanText,
           detectedLanguage: result.detectedLanguage,
           meaning: result.meaning,
         });
-        console.log(`✨ New word discovered: ${cleanText}`);
+        console.log(`New word : ${cleanText}`);
       } else {
-        // If it exists, we just reference the old one
+        // If it exists, reference the old one
         savedRecord = existingEntry;
-        console.log(`📖 Word already known: ${cleanText}`);
+        console.log(`Word already known: ${cleanText}`);
       }
     }
 
