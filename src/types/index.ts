@@ -7,9 +7,6 @@ export interface ApiResponse<T = any> {
   error?: string;
 }
 
-/**
- * Analysis Result Interface
- */
 export interface IAnalysisResult {
   language: string;
   meaning: string;
