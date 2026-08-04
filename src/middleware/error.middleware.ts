@@ -2,7 +2,6 @@ import { Request, Response, NextFunction } from 'express';
 
 /**
  * @desc    Global Error Handling Middleware
- * @notice  In Express, error middleware must have 4 arguments (err, req, res, next)
  */
 export const errorHandler = (
   err: any,
