@@ -23,12 +23,10 @@ const UserSchema: Schema = new Schema(
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { 
       type: String,
-      // select: false, // Optional: prevents password from being returned in queries by default
       required: function(this: any) { return !this.googleId; }
     },
     googleId: { type: String, unique: true, sparse: true },
     isVerified: { type: Boolean, default: false },
-    // Fields for 6-digit OTP
     verificationToken: { type: String, select: false },
     verificationTokenExpire: Date,
     resetPasswordToken: { type: String, select: false },
