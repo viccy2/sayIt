@@ -29,7 +29,6 @@ app.use(logger);
 
 /**
  * CORS Configuration
- * Hardcoded production URL for reliability, plus environment flexibility.
  */
 const allowedOrigins = [
   'https://say-it-frontend.vercel.app',    // Primary production frontend
@@ -116,7 +115,7 @@ const PORT = process.env.PORT || 5000;
 
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
-    console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+    console.log(` Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
   });
 }
 
