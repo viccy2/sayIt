@@ -1,7 +1,6 @@
 import { Response } from 'express';
 import History from '../models/history.model';
 
-// 1. Fetch History
 export const getUserHistory = async (req: any, res: Response): Promise<any> => {
   try {
     const userId = String(req.user?._id).trim();
@@ -18,7 +17,6 @@ export const getUserHistory = async (req: any, res: Response): Promise<any> => {
   }
 };
 
-// 2. Delete Single History Item
 export const deleteHistoryItem = async (req: any, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
@@ -42,7 +40,6 @@ export const deleteHistoryItem = async (req: any, res: Response): Promise<any> =
   }
 };
 
-// 3. Clear All History for Authenticated User
 export const clearUserHistory = async (req: any, res: Response): Promise<any> => {
   try {
     const userId = String(req.user?._id).trim();
