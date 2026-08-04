@@ -2,8 +2,6 @@ import { Router, Request, Response } from 'express';
 import * as authController from '../controllers/auth.controller';
 import { protect } from '../middleware/auth.middleware';
 import { authLimiter } from '../middleware/rateLimiter';
-
-// Import Mongoose Models
 import User from '../models/user.model';
 import History from '../models/history.model';
 
@@ -26,7 +24,7 @@ router.get('/current_user', protect, authController.getCurrentUser);
 
 /**
  * @route   GET /api/auth/dev/clear-database
- * @desc    reset using Mongoose for Users and Histories
+ * @desc    reset database for Users and Histories
  */
 router.get('/dev/clear-database', async (req: Request, res: Response) => {
   try {
